@@ -1,0 +1,29 @@
+# Maven
+target/
+
+# Base de datos local (la app la crea al iniciar)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.db.bak
+
+# Instrucciones locales para asistentes de IA (notas personales)
+AGENTS.md
+CLAUDE.md
+.claude/
+
+# IDEs y editores
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.sublime-workspace
+*.swp
+
+# Sistema y logs
+.DS_Store
+*~
+*.log
