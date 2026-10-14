@@ -3,6 +3,8 @@ package com.inventario.modelo;
 public class Movimiento {
 
     private static final int MAX_DESCRIPCION = 200;
+    // Tope por movimiento: frena errores de tipeo con muchos ceros
+    public static final int MAX_CANTIDAD = 1_000_000;
 
     private final int id;
     private final int productoId;
@@ -29,6 +31,9 @@ public class Movimiento {
         } else {
             if (cantidad <= 0) {
                 throw new IllegalArgumentException("La cantidad debe ser mayor que cero.");
+            }
+            if (cantidad > MAX_CANTIDAD) {
+                throw new IllegalArgumentException("La cantidad no puede superar " + MAX_CANTIDAD + ".");
             }
         }
         this.id = 0;

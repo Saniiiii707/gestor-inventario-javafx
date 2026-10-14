@@ -98,6 +98,11 @@ public class MovimientosView extends VBox {
 
     // --- Lo que el controlador puede pedirle a la vista ---
 
+    // Tipos que se ofrecen en el desplegable (según los permisos de quien inició sesión)
+    public void setTiposPermitidos(List<TipoMovimiento> tipos) {
+        comboTipo.getItems().setAll(tipos);
+    }
+
     public void setProductos(List<Producto> lista) { productos.setAll(lista); }
     public void setMovimientos(List<Movimiento> lista) { movimientos.setAll(lista); }
 
@@ -158,6 +163,10 @@ public class MovimientosView extends VBox {
                     lblResumen.setText("El stock contado no puede ser negativo.");
                     return;
                 }
+                if (cantidad > Producto.MAX_STOCK) {
+                    lblResumen.setText("El stock contado no puede superar " + Producto.MAX_STOCK + ".");
+                    return;
+                }
                 int anterior = p.getStockActual();
                 int diferencia = cantidad - anterior;
                 String texto2 = "Sistema: " + anterior + " | Contado: " + cantidad
@@ -172,6 +181,10 @@ public class MovimientosView extends VBox {
             } else {
                 if (cantidad <= 0) {
                     lblResumen.setText("La cantidad debe ser mayor que cero.");
+                    return;
+                }
+                if (cantidad > Movimiento.MAX_CANTIDAD) {
+                    lblResumen.setText("La cantidad no puede superar " + Movimiento.MAX_CANTIDAD + ".");
                     return;
                 }
                 boolean esEntrada = tipo == TipoMovimiento.ENTRADA;

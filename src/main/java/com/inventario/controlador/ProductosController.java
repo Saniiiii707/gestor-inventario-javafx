@@ -9,6 +9,7 @@ import com.inventario.vista.Mensajes;
 import com.inventario.vista.ProductosView;
 import java.util.List;
 import javafx.scene.control.Alert;
+import com.inventario.modelo.Usuario;
 
 public class ProductosController {
 
@@ -16,9 +17,12 @@ public class ProductosController {
     private final CategoriaDAO categoriaDAO = new CategoriaDAO();
     private final ProveedorDAO proveedorDAO = new ProveedorDAO();
     private final ProductosView vista;
+    private final Usuario usuario;
 
-    public ProductosController(ProductosView vista) {
+    public ProductosController(ProductosView vista, Usuario usuario) {
         this.vista = vista;
+        this.usuario = usuario;
+        vista.setSoloLectura(!usuario.puedeEditarCatalogo());
         vista.setOnAgregar(this::agregar);
         vista.setOnActualizar(this::actualizar);
         vista.setOnEliminar(this::eliminar);
@@ -34,6 +38,15 @@ public class ProductosController {
         vista.setAlertaStockBajo(lista.stream().filter(Producto::tieneStockBajo).count());
     }
 
+    // Aunque la vista oculte el formulario, se vuelve a comprobar aquí
+    private boolean tienePermiso() {
+        if (!usuario.puedeEditarCatalogo()) {
+            Mensajes.mostrar(Alert.AlertType.WARNING, "No tienes permiso para modificar productos.");
+            return false;
+        }
+        return true;
+    }
+
     // Lee el formulario y arma un Producto; lanza excepciones si hay datos inválidos
     private Producto leerFormulario() {
         Categoria categoria = vista.getCategoriaElegida();
@@ -47,6 +60,7 @@ public class ProductosController {
     }
 
     private void agregar() {
+        if (!tienePermiso()) return;
         try {
             productoDAO.insertar(leerFormulario());
             vista.limpiarFormulario();
@@ -61,6 +75,7 @@ public class ProductosController {
     }
 
     private void actualizar() {
+        if (!tienePermiso()) return;
         Producto seleccionado = vista.getSeleccionado();
         if (seleccionado == null) {
             Mensajes.mostrar(Alert.AlertType.WARNING, "Selecciona un producto de la tabla.");
@@ -82,6 +97,7 @@ public class ProductosController {
     }
 
     private void eliminar() {
+        if (!tienePermiso()) return;
         Producto seleccionado = vista.getSeleccionado();
         if (seleccionado == null) {
             Mensajes.mostrar(Alert.AlertType.WARNING, "Selecciona un producto de la tabla.");
@@ -95,7 +111,13 @@ public class ProductosController {
             vista.limpiarFormulario();
             recargar();
         } catch (RuntimeException ex) {
-            Mensajes.mostrar(Alert.AlertType.ERROR, Mensajes.traducirError(ex));
+            if (Mensajes.esErrorDeRelacion(ex)) {
+                Mensajes.mostrar(Alert.AlertType.WARNING,
+                        "No se puede eliminar \"" + seleccionado.getNombre() + "\" porque tiene movimientos registrados.\n"
+                        + "Su historial debe conservarse.");
+            } else {
+                Mensajes.mostrar(Alert.AlertType.ERROR, Mensajes.traducirError(ex));
+            }
         }
     }
 }

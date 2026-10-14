@@ -4,14 +4,15 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
 public class LoginView extends VBox {
 
+    private static final double ANCHO_FORMULARIO = 360;
+
     private final TextField campoUsuario = new TextField();
-    private final PasswordField campoContrasena = new PasswordField(); // muestra puntos, no el texto
+    private final CampoContrasena campoContrasena = new CampoContrasena("Contraseña");
     private final Button btnEntrar = new Button("Entrar");
 
     public LoginView() {
@@ -24,11 +25,15 @@ public class LoginView extends VBox {
         Label subtitulo = new Label("Inicia sesión para continuar");
 
         campoUsuario.setPromptText("Usuario");
-        campoContrasena.setPromptText("Contraseña");
         btnEntrar.setDefaultButton(true);           // Enter equivale a hacer clic en Entrar
         btnEntrar.setMaxWidth(Double.MAX_VALUE);    // botón del ancho del formulario
 
-        getChildren().addAll(titulo, subtitulo, campoUsuario, campoContrasena, btnEntrar);
+        // El formulario tiene un ancho máximo y queda centrado, aunque la ventana se maximice
+        VBox contenido = new VBox(10);
+        contenido.setAlignment(Pos.CENTER);
+        contenido.setMaxWidth(ANCHO_FORMULARIO);
+        contenido.getChildren().addAll(titulo, subtitulo, campoUsuario, campoContrasena, btnEntrar);
+        getChildren().add(contenido);
     }
 
     // --- Lo que el controlador puede pedirle a la vista ---
@@ -38,8 +43,8 @@ public class LoginView extends VBox {
 
     // Tras un intento fallido: borra solo la contraseña y deja el cursor ahí
     public void limpiarContrasena() {
-        campoContrasena.clear();
-        campoContrasena.requestFocus();
+        campoContrasena.limpiar();
+        campoContrasena.enfocar();
     }
 
     public void setOnEntrar(Runnable accion) {

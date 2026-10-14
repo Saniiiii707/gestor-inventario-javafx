@@ -34,7 +34,10 @@ public class LoginController {
                 alIniciarSesion.accept(encontrado.get());
             } else {
                 // Mismo mensaje para todos los motivos: no revela si el usuario existe
-                Mensajes.mostrar(Alert.AlertType.WARNING, "Usuario o contraseña incorrectos.");
+                Mensajes.mostrar(Alert.AlertType.WARNING,
+                        "Usuario o contraseña incorrectos.\n"
+                        + "Si fallaste varias veces seguidas, espera " + UsuarioDAO.MINUTOS_BLOQUEO
+                        + " minutos antes de volver a intentar.");
                 vista.limpiarContrasena();
             }
         } catch (RuntimeException ex) {

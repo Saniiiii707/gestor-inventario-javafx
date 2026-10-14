@@ -39,7 +39,14 @@ public class Usuario {
     }
 
     public boolean isActivo() { return activo; }
-    public void setActivo(boolean activo) { this.activo = activo; }
 
     public boolean esAdmin() { return rol == Rol.ADMIN; }
+
+    public boolean puedeEditarCatalogo() { return esAdmin(); }
+
+    public boolean puedeRegistrar(TipoMovimiento tipo){
+        return tipo != TipoMovimiento.AJUSTE || esAdmin();
+    }
+
+    public boolean puedeGestionarUsuarios(){ return esAdmin(); }
 }

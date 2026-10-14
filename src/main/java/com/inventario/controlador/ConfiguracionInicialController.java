@@ -3,7 +3,6 @@ package com.inventario.controlador;
 import com.inventario.dao.UsuarioDAO;
 import com.inventario.modelo.Rol;
 import com.inventario.modelo.Usuario;
-import com.inventario.util.Validaciones;
 import com.inventario.vista.ConfiguracionInicialView;
 import com.inventario.vista.Mensajes;
 import java.util.function.Consumer;
@@ -32,24 +31,14 @@ public class ConfiguracionInicialController {
             return;
         }
 
-        // b) Las dos contraseñas deben coincidir: si no, se borran solo ellas
+        // b) Contraseñas: iguales entre sí y válidas (el DAO las vuelve a validar). Si fallan, se borran solo ellas
         String contrasena = vista.getContrasenaIngresada();
-        if (!contrasena.equals(vista.getRepeticionIngresada())) {
-            Mensajes.mostrar(Alert.AlertType.WARNING, "Las contraseñas no coinciden.");
-            vista.limpiarContrasenas();
+        if (!ValidacionContrasena.contrasenaAceptada(contrasena, vista.getRepeticionIngresada(),
+                vista::limpiarContrasenas)) {
             return;
         }
 
-        // c) Validar la contraseña antes de ir al DAO (que la vuelve a validar)
-        try {
-            Validaciones.contrasenaValida(contrasena);
-        } catch (IllegalArgumentException ex) {
-            Mensajes.mostrar(Alert.AlertType.WARNING, ex.getMessage());
-            vista.limpiarContrasenas();
-            return;
-        }
-
-        // d) Guardar: ante un error no se limpia ningún campo
+        // c) Guardar: ante un error no se limpia ningún campo
         try {
             dao.crearAdministradorInicial(admin, contrasena);
             Mensajes.mostrar(Alert.AlertType.INFORMATION,

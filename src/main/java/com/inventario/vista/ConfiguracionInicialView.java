@@ -3,17 +3,21 @@ package com.inventario.vista;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 // Se muestra solo la primera vez, cuando todavía no existe el administrador
 public class ConfiguracionInicialView extends VBox {
 
+    private static final double ANCHO_FORMULARIO = 420;
+
     private final TextField campoUsuario = new TextField();
-    private final PasswordField campoContrasena = new PasswordField();
-    private final PasswordField campoRepetir = new PasswordField();
+    private final CampoContrasena campoContrasena = new CampoContrasena("Contraseña", false);
+    private final CampoContrasena campoRepetir = new CampoContrasena("Repetir contraseña", false);
+    private final CheckBox chkMostrar = new CheckBox("Mostrar contraseñas");
     private final Button btnCrear = new Button("Crear administrador");
 
     public ConfiguracionInicialView() {
@@ -27,8 +31,10 @@ public class ConfiguracionInicialView extends VBox {
                 "Es la primera vez que se usa la aplicación.\n"
                 + "Crea la cuenta de administrador para empezar.");
         explicacion.setWrapText(true);
+        explicacion.setMinHeight(Region.USE_PREF_SIZE);
         Label reglas = new Label("Contraseña: al menos 8 caracteres. Mejor una frase larga que una palabra rara.");
         reglas.setWrapText(true);
+        reglas.setMinHeight(Region.USE_PREF_SIZE);
         reglas.setStyle("-fx-text-fill: gray;");
         Label reglasUsuario = new Label(
                 "El usuario debe tener de 3 a 30 caracteres y empezar con una letra.\n"
@@ -36,16 +42,23 @@ public class ConfiguracionInicialView extends VBox {
                 + "No puede tener espacios: usa un punto o un guion bajo en su lugar.\n"
                 + "Ejemplos: ana, ana.gimenez, ana_g");
         reglasUsuario.setWrapText(true);
+        reglasUsuario.setMinHeight(Region.USE_PREF_SIZE);
         reglasUsuario.setStyle("-fx-text-fill: gray;");
 
         campoUsuario.setPromptText("Nombre de usuario");
-        campoContrasena.setPromptText("Contraseña");
-        campoRepetir.setPromptText("Repetir contraseña");
+        // bindBidirectional y no bind: limpiar() hace setSelected(false), y con bind lanzaría excepción
+        campoContrasena.mostrarProperty().bindBidirectional(chkMostrar.selectedProperty());
+        campoRepetir.mostrarProperty().bindBidirectional(chkMostrar.selectedProperty());
         btnCrear.setDefaultButton(true);
         btnCrear.setMaxWidth(Double.MAX_VALUE);
 
-        getChildren().addAll(titulo, explicacion, campoUsuario, reglasUsuario,
-                campoContrasena, campoRepetir, reglas, btnCrear);
+        // El formulario tiene un ancho máximo y queda centrado, aunque la ventana se maximice
+        VBox contenido = new VBox(10);
+        contenido.setAlignment(Pos.CENTER);
+        contenido.setMaxWidth(ANCHO_FORMULARIO);
+        contenido.getChildren().addAll(titulo, explicacion, campoUsuario, reglasUsuario,
+                campoContrasena, campoRepetir, chkMostrar, reglas, btnCrear);
+        getChildren().add(contenido);
     }
 
     // --- Lo que el controlador puede pedirle a la vista ---
@@ -56,9 +69,9 @@ public class ConfiguracionInicialView extends VBox {
 
     // Tras un error: borra las dos contraseñas (por seguridad) y vuelve a la primera
     public void limpiarContrasenas() {
-        campoContrasena.clear();
-        campoRepetir.clear();
-        campoContrasena.requestFocus();
+        campoContrasena.limpiar();
+        campoRepetir.limpiar();
+        campoContrasena.enfocar();
     }
 
     // Tras un error en el usuario: borra solo ese campo y deja el cursor ahí

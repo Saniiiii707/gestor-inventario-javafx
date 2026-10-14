@@ -44,6 +44,8 @@ public class ProductosView extends VBox {
     private final Button btnEliminar = new Button("Eliminar");
     private final Button btnLimpiar = new Button("Limpiar");
 
+    private final VBox formulario = new VBox(10);
+
     public ProductosView() {
         super(10);
         setPadding(new Insets(15));
@@ -150,7 +152,8 @@ public class ProductosView extends VBox {
         HBox fila2 = new HBox(10, comboCategoria, comboProveedor);
         HBox botones = new HBox(10, btnAgregar, btnActualizar, btnEliminar, btnLimpiar);
 
-        getChildren().addAll(lblAlerta, fila1, fila2, botones, tabla);
+        formulario.getChildren().addAll(fila1, fila2, botones);
+        getChildren().addAll(lblAlerta, formulario, tabla);
     }
 
     private void seleccionarCategoria(int categoriaId) {
@@ -208,6 +211,13 @@ public class ProductosView extends VBox {
     }
 
     // --- Lo que el controlador puede pedirle a la vista ---
+
+
+    // Solo lectura: oculta el formulario sin dejar el hueco; la tabla y la alerta siguen visibles
+    public void setSoloLectura(boolean soloLectura) {
+        formulario.setVisible(!soloLectura);
+        formulario.setManaged(!soloLectura);
+    }
 
     public void setProductos(List<Producto> lista) { productos.setAll(lista); }
     public void setCategorias(List<Categoria> lista) { categorias.setAll(lista); }

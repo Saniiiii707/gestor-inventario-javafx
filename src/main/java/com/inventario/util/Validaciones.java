@@ -59,9 +59,9 @@ public class Validaciones {
         if (texto == null || texto.isBlank() || texto.length() < 8) {
             throw new IllegalArgumentException("La contraseña debe tener al menos 8 caracteres.");
         }
-        if (texto.getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (texto.getBytes(StandardCharsets.UTF_8).length > Contrasenas.MAX_BYTES) {
             throw new IllegalArgumentException(
-                "La contraseña es demasiado larga (máximo 72 caracteres; la ñ y las letras con tilde cuentan doble).");
+                "La contraseña es demasiado larga (máximo " + Contrasenas.MAX_BYTES + " caracteres; la ñ y las letras con tilde cuentan doble).");
         }
         return texto;
     }

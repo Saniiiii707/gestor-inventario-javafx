@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import com.inventario.util.Validaciones;
 
 public class CategoriaDAO {
@@ -48,24 +47,6 @@ public class CategoriaDAO {
             throw new RuntimeException("Error al listar las categorías", e);
         }
         return categorias;
-    }
-
-    // READ (una)
-    public Optional<Categoria> buscarPorId(int id) {
-        String sql = "SELECT id, nombre FROM categorias WHERE id = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(new Categoria(rs.getInt("id"), rs.getString("nombre")));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al buscar la categoría", e);
-        }
-        return Optional.empty();
     }
 
     // UPDATE

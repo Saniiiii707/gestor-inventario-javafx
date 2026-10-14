@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Database{
-    private static final String URL = "jdbc:sqlite:inventario.db?foreign_keys=on";
+    // SQLite no sobrescribe lo que borra o reemplaza: los bytes viejos (por ejemplo, hashes de
+    // contraseñas anteriores) quedan en el archivo hasta que se reutiliza ese espacio.
+    // secure_delete los sobrescribe con ceros. Se configura por conexión, como foreign_keys.
+    private static final String URL = "jdbc:sqlite:inventario.db?foreign_keys=on&secure_delete=on";
 
     public static Connection getConnection() throws SQLException{
         return DriverManager.getConnection(URL);
@@ -28,7 +31,8 @@ public class Database{
                 rol TEXT NOT NULL CHECK (rol IN ('ADMIN', 'VENDEDOR')),
                 activo INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
                 intentos_fallidos INTEGER NOT NULL DEFAULT 0 CHECK (intentos_fallidos >= 0),
-                bloqueado_hasta TEXT
+                bloqueado_hasta TEXT,
+                debe_cambiar_contrasena INTEGER NOT NULL DEFAULT 0 CHECK (debe_cambiar_contrasena IN (0, 1))
             )
             """,
             """
@@ -73,6 +77,17 @@ public class Database{
                 FOREIGN KEY (producto_id) REFERENCES productos(id),
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
             )
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS registro_accesos(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+                usuario_intentado TEXT NOT NULL,
+                usuario_id INTEGER,
+                resultado TEXT NOT NULL CHECK (resultado IN ('CORRECTO', 'CONTRASENA_INCORRECTA',
+                    'BLOQUEO_ACTIVADO', 'CUENTA_BLOQUEADA', 'CUENTA_INACTIVA', 'USUARIO_INEXISTENTE')),
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+            )
             """
         );
 
@@ -91,6 +106,8 @@ public class Database{
             agregarColumnaSiFalta(conn, "usuarios", "intentos_fallidos",
                     "INTEGER NOT NULL DEFAULT 0 CHECK (intentos_fallidos >= 0)");
             agregarColumnaSiFalta(conn, "usuarios", "bloqueado_hasta", "TEXT");
+            agregarColumnaSiFalta(conn, "usuarios", "debe_cambiar_contrasena",
+                    "INTEGER NOT NULL DEFAULT 0 CHECK (debe_cambiar_contrasena IN (0, 1))");
 
             stmt.execute("DROP INDEX IF EXISTS idx_proveedores_nombre");
             migrarNombreNormalizado(conn, "categorias");
@@ -99,6 +116,17 @@ public class Database{
                 INSERT OR IGNORE INTO usuarios (id, username, password_hash, rol)
                 VALUES (1, 'admin', 'provisorio', 'ADMIN')
                 """);
+
+            // Registros de antes del cambio: si el usuario no existía, lo escrito pudo ser una
+            // contraseña en el campo equivocado. Se borra; si ya no queda ninguno, no hace nada.
+            try (PreparedStatement ps = conn.prepareStatement("""
+                    UPDATE registro_accesos SET usuario_intentado = ?
+                    WHERE usuario_id IS NULL AND usuario_intentado <> ?
+                    """)) {
+                ps.setString(1, RegistroAccesoDAO.USUARIO_DESCONOCIDO);
+                ps.setString(2, RegistroAccesoDAO.USUARIO_DESCONOCIDO);
+                ps.executeUpdate();
+            }
             System.out.println("Base de datos lista.");
         }catch(SQLException e){
             throw new RuntimeException("Error al crear las tablas", e);

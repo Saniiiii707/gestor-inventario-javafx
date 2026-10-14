@@ -1,6 +1,7 @@
 package com.inventario.dao;
 
 import com.inventario.modelo.Movimiento;
+import com.inventario.modelo.Producto;
 import com.inventario.modelo.TipoMovimiento;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,6 +39,9 @@ public class MovimientoDAO {
     // de la misma transacción, y se guarda como cantidad (con signo).
     public void registrarAjuste(int productoId, int usuarioId, int stockContado,
                                 int stockVisto, String descripcion) {
+        if (stockContado > Producto.MAX_STOCK) {
+            throw new IllegalArgumentException("El stock contado no puede superar " + Producto.MAX_STOCK + ".");
+        }
         try (Connection conn = Database.getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -113,13 +117,17 @@ public class MovimientoDAO {
                 }
             }
         } else if (tipo == TipoMovimiento.ENTRADA) {
-            String sql = "UPDATE productos SET stock_actual = stock_actual + ? WHERE id = ? RETURNING stock_actual";
+            String sql = "UPDATE productos SET stock_actual = stock_actual + ? "
+                    + "WHERE id = ? AND stock_actual + ? <= ? RETURNING stock_actual";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setInt(1, m.getCantidad());
                 ps.setInt(2, m.getProductoId());
+                ps.setInt(3, m.getCantidad());
+                ps.setInt(4, Producto.MAX_STOCK);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (!rs.next()) {
-                        throw new IllegalStateException("El producto no existe.");
+                        throw new IllegalStateException("No se pudo registrar la entrada: el producto no existe "
+                                + "o el stock superaría el máximo permitido (" + Producto.MAX_STOCK + ").");
                     }
                     return rs.getInt("stock_actual");
                 }

@@ -4,6 +4,9 @@ import com.inventario.util.Validaciones;
 
 public class Producto {
 
+    // Tope del stock total: muy por debajo del máximo de un int (2.147.483.647)
+    public static final int MAX_STOCK = 1_000_000_000;
+
     private int id;
     private String nombre;
     private double precio;
@@ -49,8 +52,9 @@ public class Producto {
 
     public double getPrecio() { return precio; }
     public void setPrecio(double precio) {
-        if (precio < 0) {
-            throw new IllegalArgumentException("El precio no puede ser negativo.");
+        // isFinite rechaza Infinity y NaN, que Double.parseDouble acepta
+        if (!Double.isFinite(precio) || precio < 0) {
+            throw new IllegalArgumentException("El precio debe ser un número válido, mayor o igual a cero.");
         }
         this.precio = precio;
     }
@@ -66,12 +70,10 @@ public class Producto {
     }
 
     public int getCategoriaId() { return categoriaId; }
-    public void setCategoriaId(int categoriaId) { this.categoriaId = categoriaId; }
 
     public String getCategoriaNombre() { return categoriaNombre; }
 
     public Integer getProveedorId() { return proveedorId; }
-    public void setProveedorId(Integer proveedorId) { this.proveedorId = proveedorId; }
 
     public String getProveedorNombre() { return proveedorNombre; }
 

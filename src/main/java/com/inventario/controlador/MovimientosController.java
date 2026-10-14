@@ -10,6 +10,8 @@ import com.inventario.modelo.Usuario;
 import com.inventario.vista.Mensajes;
 import com.inventario.vista.MovimientosView;
 import javafx.scene.control.Alert;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MovimientosController {
 
@@ -22,6 +24,16 @@ public class MovimientosController {
         this.vista = vista;
         this.usuario = usuario;
         vista.setOnRegistrar(this::registrar);
+
+        // Solo se ofrecen los tipos que este usuario puede registrar (la regla vive en Usuario)
+        List<TipoMovimiento> permitidos = new ArrayList<>();
+        for (TipoMovimiento tipo : TipoMovimiento.values()) {
+            if (usuario.puedeRegistrar(tipo)) {
+                permitidos.add(tipo);
+            }
+        }
+        vista.setTiposPermitidos(permitidos);
+
         recargar();
     }
 
@@ -38,17 +50,24 @@ public class MovimientosController {
 
     private void registrar() {
         try {
+            TipoMovimiento tipo = vista.getTipoElegido();
+            // Defensa en profundidad: aunque el desplegable no lo ofrezca, se vuelve a comprobar
+            if (tipo != null && !usuario.puedeRegistrar(tipo)) {
+                throw new IllegalArgumentException("No tienes permiso para registrar movimientos de tipo " + tipo + ".");
+            }
             Producto producto = vista.getProductoElegido();
             if (producto == null) {
                 throw new IllegalArgumentException("Elige un producto.");
             }
             int cantidad = Integer.parseInt(vista.getCantidadIngresada().trim());
             String descripcion = vista.getDescripcionIngresada();
-            TipoMovimiento tipo = vista.getTipoElegido();
             if (tipo == TipoMovimiento.AJUSTE) {
                 // El usuario informa el stock contado, nunca la diferencia
                 if (cantidad < 0) {
                     throw new IllegalArgumentException("El stock contado no puede ser negativo.");
+                }
+                if (cantidad > Producto.MAX_STOCK) {
+                    throw new IllegalArgumentException("El stock contado no puede superar " + Producto.MAX_STOCK + ".");
                 }
                 if (descripcion == null || descripcion.trim().isEmpty()) {
                     throw new IllegalArgumentException("La descripción es obligatoria para un ajuste.");
