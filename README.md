@@ -1,6 +1,6 @@
 # Gestor de inventario
 
-Aplicación de escritorio para controlar el inventario de una tienda pequeña: productos con categoría y proveedor, un historial de movimientos (entradas, salidas y ajustes) que mantiene el stock, alertas de stock bajo, e inicio de sesión con roles y gestión de usuarios.
+Aplicación de escritorio para controlar el inventario de pequeñas y medianas empresas (pymes): productos con categoría y proveedor, un historial de movimientos (entradas, salidas y ajustes) que mantiene el stock, alertas de stock bajo, e inicio de sesión con roles y gestión de usuarios.
 
 > **Estado:** en desarrollo. Ver [Hoja de ruta](#hoja-de-ruta).
 
@@ -22,6 +22,7 @@ Aplicación de escritorio para controlar el inventario de una tienda pequeña: p
 - **Movimientos de stock:** entradas, salidas y ajustes por conteo físico. El stock solo cambia a través de movimientos.
 - **Kardex:** cada movimiento guarda el stock anterior y el resultante.
 - **Alertas de stock bajo:** filas resaltadas y contador en la pantalla de productos; resumen en vivo antes de registrar un movimiento.
+- **Búsqueda y filtros:** buscadores en los desplegables y filtros en las tablas que no distinguen mayúsculas ni tildes ("cafe" encuentra "Café"). Productos por nombre, categoría o solo los de stock bajo; movimientos por rango de fechas, producto y tipo.
 - **Usuarios y roles:** inicio de sesión, roles ADMIN y VENDEDOR, gestión de usuarios (crear, cambiar rol, desactivar y restablecer contraseña), cambio de la propia contraseña y cierre de sesión.
 
 ## Decisiones de diseño
@@ -93,7 +94,7 @@ La base de datos `inventario.db` se crea en la carpeta del proyecto. En la prime
 - [x] Bloqueo temporal tras intentos fallidos
 - [x] Gestión de usuarios
 - [ ] Auditoría de acciones de administrador
-- [ ] Búsqueda y filtros
+- [x] Búsqueda y filtros
 - [ ] Reportes en PDF y exportación a CSV
 - [ ] Pruebas con JUnit y registro de errores
 - [ ] Instaladores para Linux y Windows
