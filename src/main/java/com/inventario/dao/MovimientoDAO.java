@@ -155,6 +155,7 @@ public class MovimientoDAO {
         }
     }
 
+    // shortcut: trae todo el historial y la vista filtra en memoria; si llega a decenas de miles de filas, filtrar en SQL
     public List<Movimiento> listar() {
         String sql = """
             SELECT m.id, m.producto_id, p.nombre AS producto, m.usuario_id,
@@ -163,7 +164,6 @@ public class MovimientoDAO {
             FROM movimientos m
             JOIN productos p ON p.id = m.producto_id
             ORDER BY m.id DESC
-            LIMIT 200
             """;
         List<Movimiento> movimientos = new ArrayList<>();
         try (Connection conn = Database.getConnection();

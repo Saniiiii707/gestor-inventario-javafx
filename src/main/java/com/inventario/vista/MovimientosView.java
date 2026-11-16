@@ -3,12 +3,17 @@ package com.inventario.vista;
 import com.inventario.modelo.Movimiento;
 import com.inventario.modelo.Producto;
 import com.inventario.modelo.TipoMovimiento;
+import com.inventario.util.Validaciones;
+import java.time.LocalDate;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -24,7 +29,15 @@ public class MovimientosView extends VBox {
     private final ObservableList<Movimiento> movimientos = FXCollections.observableArrayList();
     private final ObservableList<Producto> productos = FXCollections.observableArrayList();
 
-    private final TableView<Movimiento> tabla = new TableView<>(movimientos);
+    private final FilteredList<Movimiento> movimientosFiltrados = new FilteredList<>(movimientos);
+    private final SortedList<Movimiento> movimientosOrdenados = new SortedList<>(movimientosFiltrados);
+    private final TableView<Movimiento> tabla = new TableView<>(movimientosOrdenados);
+    private final DatePicker filtroDesde = new DatePicker();
+    private final DatePicker filtroHasta = new DatePicker();
+    private final TextField filtroProducto = new TextField();
+    private final ComboBox<TipoMovimiento> filtroTipo =
+            new ComboBox<>(FXCollections.observableArrayList(TipoMovimiento.values()));
+    private final Button btnQuitarFiltros = new Button("Quitar filtros");
     private final ComboBox<Producto> comboProducto = new ComboBox<>(productos);
     private final ComboBox<TipoMovimiento> comboTipo =
             new ComboBox<>(FXCollections.observableArrayList(TipoMovimiento.values()));
@@ -32,6 +45,7 @@ public class MovimientosView extends VBox {
     private final TextField campoDescripcion = new TextField();
     private final Button btnRegistrar = new Button("Registrar");
     private final Label lblResumen = new Label();
+    private final TextField buscarProducto = BuscadorCombo.crear(comboProducto, Producto::coincideCon);
 
     public MovimientosView() {
         super(10);
@@ -67,6 +81,24 @@ public class MovimientosView extends VBox {
 
         tabla.getColumns().addAll(colFecha, colProducto, colTipo, colCantidad,
                 colStockAnterior, colStockResultante, colDescripcion);
+        movimientosOrdenados.comparatorProperty().bind(tabla.comparatorProperty());
+
+        filtroDesde.setPromptText("Desde");
+        filtroHasta.setPromptText("Hasta");
+        filtroDesde.setPrefWidth(130);
+        filtroHasta.setPrefWidth(130);
+        filtroProducto.setPromptText("Filtrar por producto");
+        filtroTipo.setPromptText("Todos los tipos");
+        filtroDesde.valueProperty().addListener((obs, anterior, nuevo) -> filtrar());
+        filtroHasta.valueProperty().addListener((obs, anterior, nuevo) -> filtrar());
+        filtroProducto.textProperty().addListener((obs, anterior, nuevo) -> filtrar());
+        filtroTipo.valueProperty().addListener((obs, anterior, nuevo) -> filtrar());
+        btnQuitarFiltros.setOnAction(e -> {
+            filtroDesde.setValue(null);
+            filtroHasta.setValue(null);
+            filtroProducto.clear();
+            filtroTipo.setValue(null);
+        });
 
         comboProducto.setPromptText("Producto");
         comboProducto.setPrefWidth(280);
@@ -91,9 +123,10 @@ public class MovimientosView extends VBox {
         comboTipo.valueProperty().addListener((obs, anterior, nuevo) -> actualizarResumen());
         campoCantidad.textProperty().addListener((obs, anterior, nuevo) -> actualizarResumen());
 
-        HBox filaDatos = new HBox(10, comboProducto, comboTipo, campoCantidad);
+        HBox filaDatos = new HBox(10, buscarProducto, comboProducto, comboTipo, campoCantidad);
         HBox filaDescripcion = new HBox(10, campoDescripcion, btnRegistrar);
-        getChildren().addAll(filaDatos, lblResumen, filaDescripcion, tabla);
+        HBox filaFiltros = new HBox(10, filtroDesde, filtroHasta, filtroProducto, filtroTipo, btnQuitarFiltros);
+        getChildren().addAll(filaDatos, lblResumen, filaDescripcion, filaFiltros, tabla);
     }
 
     // --- Lo que el controlador puede pedirle a la vista ---
@@ -112,6 +145,7 @@ public class MovimientosView extends VBox {
     public String getDescripcionIngresada() { return campoDescripcion.getText(); }
 
     public void limpiarFormulario() {
+        buscarProducto.clear();
         comboProducto.setValue(null);
         comboTipo.setValue(null);
         campoCantidad.clear();
@@ -137,6 +171,21 @@ public class MovimientosView extends VBox {
 
     public void setOnRegistrar(Runnable accion) {
         btnRegistrar.setOnAction(e -> accion.run());
+    }
+
+    private void filtrar() {
+        LocalDate desde = filtroDesde.getValue();
+        LocalDate hasta = filtroHasta.getValue();
+        String producto = filtroProducto.getText();
+        TipoMovimiento tipo = filtroTipo.getValue();
+        movimientosFiltrados.setPredicate(m -> {
+            // La fecha viene de SQLite como "AAAA-MM-DD HH:MM:SS": comparar el día como texto basta
+            String dia = m.getFecha().substring(0, 10);
+            return (desde == null || dia.compareTo(desde.toString()) >= 0)
+                    && (hasta == null || dia.compareTo(hasta.toString()) <= 0)
+                    && (producto.isBlank() || Validaciones.contiene(m.getProductoNombre(), producto))
+                    && (tipo == null || m.getTipo() == tipo);
+        });
     }
 
     private void actualizarResumen() {

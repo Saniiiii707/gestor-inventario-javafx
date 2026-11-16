@@ -85,4 +85,11 @@ public class Producto {
     public boolean tieneStockBajo() {
         return esStockBajo(stockActual);
     }
+
+    // Busca en el nombre y en la categoría; sin texto, todo coincide
+    public boolean coincideCon(String texto) {
+        return texto == null || texto.isBlank()
+                || Validaciones.contiene(nombre, texto)
+                || Validaciones.contiene(categoriaNombre, texto);
+    }
 }

@@ -42,6 +42,11 @@ public class Validaciones {
         return clave.toString().replaceAll("\\s+", " ");
     }
 
+    // Búsqueda sin distinguir mayúsculas ni tildes: "cafe" encuentra "Café Molido"
+    public static boolean contiene(String texto, String buscado) {
+        return texto != null && normalizarNombre(texto).contains(normalizarNombre(buscado));
+    }
+
 
     public static String usuarioValido(String texto) {
         if (texto == null || texto.isBlank()) {
