@@ -125,7 +125,8 @@ public class MovimientosView extends VBox {
 
         HBox filaDatos = new HBox(10, buscarProducto, comboProducto, comboTipo, campoCantidad);
         HBox filaDescripcion = new HBox(10, campoDescripcion, btnRegistrar);
-        HBox filaFiltros = new HBox(10, filtroDesde, filtroHasta, filtroProducto, filtroTipo, btnQuitarFiltros);
+        HBox filaFiltros = new HBox(10, filtroDesde, filtroHasta, filtroProducto, filtroTipo, btnQuitarFiltros,
+                ExportarCsv.crearBoton(tabla, "movimientos"));
         getChildren().addAll(filaDatos, lblResumen, filaDescripcion, filaFiltros, tabla);
     }
 

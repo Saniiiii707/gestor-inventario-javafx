@@ -27,3 +27,6 @@ CLAUDE.md
 .DS_Store
 *~
 *.log
+
+# Guía local de pruebas manuales en Windows
+docs/pruebas-windows.md

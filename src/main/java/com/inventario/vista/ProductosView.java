@@ -172,7 +172,7 @@ public class ProductosView extends VBox {
         HBox botones = new HBox(10, btnAgregar, btnActualizar, btnEliminar, btnLimpiar);
 
         formulario.getChildren().addAll(fila1, fila2, botones);
-        HBox filaFiltros = new HBox(10, campoFiltro, chkStockBajo);
+        HBox filaFiltros = new HBox(10, campoFiltro, chkStockBajo, ExportarCsv.crearBoton(tabla, "productos"));
         filaFiltros.setAlignment(Pos.CENTER_LEFT);
         getChildren().addAll(lblAlerta, formulario, filaFiltros, tabla);
     }
